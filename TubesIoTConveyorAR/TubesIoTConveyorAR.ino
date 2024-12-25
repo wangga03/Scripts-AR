@@ -25,7 +25,7 @@ Servo servo2;
 
 // Variabel status
 bool conveyorRunning = false;
-int motorSpeed = 200;               // Kecepatan default (0-255)
+int motorSpeed = 200;  // Kecepatan default (0-255)
 int speed = 0;
 int pwmVal;
 const float maxTemperature = 34.0;  // Suhu maksimum sebelum conveyor berhenti
@@ -37,11 +37,19 @@ int bendaNonLogam = 0;   // Total benda non-logam
 int prevStateIR = HIGH;  // Status sebelumnya untuk sensor IR
 float temperatureData = 0.;
 
+
+bool stateButton;
+float power;
+int counter = 0;
+
 /* Use the following instance for Test Mode (No Authentication) */
 Firebase fb(REFERENCE_URL);
 
 /* Use the following instance for Locked Mode (With Authentication) */
 // Firebase fb(REFERENCE_URL, AUTH_TOKEN);
+
+
+int timer_firebase_start;
 
 void setup() {
   Serial.begin(115200);
@@ -92,14 +100,20 @@ void setup() {
   Serial.println("WiFi Connected");
   Serial.println();
   /* ----- */
-
-
-  fb.remove("Example");
 }
 
 void loop() {
-  bool stateButton = fb.getBool("ButtonState/state");
-  int power = fb.getInt("TubesIoT/power/value");  //Power dalam persen
+
+
+  counter++;
+
+  Serial.print("Counter : ");
+  Serial.println(counter);
+
+  stateButton = fb.getBool("ButtonState/state");
+  power = fb.getFloat("TubesIoT/power/value");  //Power dalam persen
+
+
   Serial.print("State Button:\t\t");
   Serial.println(stateButton);
   Serial.print("Power:\t\t");
@@ -107,18 +121,34 @@ void loop() {
 
   // Mengatur power
 
-  pwmVal = 200 * (power / 100);
+  float val = (power / 100);
+
+  pwmVal = 200 * val;
   speed = 200 - pwmVal;
-  
+
+  Serial.print("Pwm Val : ");
+  Serial.println(pwmVal);
+
+  Serial.print("Speed : ");
+  Serial.println(speed);
+  Serial.print("val : ");
+  Serial.println(val);
+
 
 
   if (stateButton == 1) {
     conveyorRunning = true;
-    motorBackward(speed);
-    Serial.println("Conveyor mulai berjalan mundur.");
+    // digitalWrite(R_EN, LOW);   // Matikan arah maju
+    // digitalWrite(L_EN, HIGH);  // Aktifkan arah mundur
+    // analogWrite(RPWM, 0);      // Pastikan maju mati
+    // analogWrite(LPWM, power);  // Atur kecepatan mundur
+    // Serial.println("Conveyor mulai berjalan mundur.");
   } else if (stateButton == 0) {
     conveyorRunning = false;
-    motorStop();  // Hentikan motor
+    digitalWrite(R_EN, LOW);  // Matikan arah maju
+    digitalWrite(L_EN, LOW);  // Matikan arah mundur
+    analogWrite(RPWM, 0);     // Pastikan maju mati
+    analogWrite(LPWM, 0);     // Pastikan mundur mati
     Serial.println("Conveyor berhenti.");
   }
 
@@ -127,28 +157,26 @@ void loop() {
 
   float temperature = dht.readTemperature();
   if (isnan(temperature)) {
-    Serial.println("Gagal membaca data dari sensor DHT11!");
+    // Serial.println("Gagal membaca data dari sensor DHT11!");
   } else {
-    Serial.print("Suhu saat ini: ");
-    Serial.print(temperature);
-    Serial.println("°C");
+    // Serial.print("Suhu saat ini: ");
+    // Serial.print(temperature);
+    // Serial.println("°C");
 
     // Jika suhu melebihi batas maksimum, hentikan conveyor
     if (temperature > maxTemperature) {
       conveyorRunning = false;
       motorStop();
-      Serial.println("Peringatan! Suhu terlalu tinggi. Conveyor dihentikan.");
+      // Serial.println("Peringatan! Suhu terlalu tinggi. Conveyor dihentikan.");
     }
   }
 
   if (conveyorRunning) {
-    motorBackward(motorSpeed);  // Conveyor berjalan mundur dengan kecepatan yang ditentukan
-
-    // Membaca sensor proximity logam
+    motorBackward(speed);  // Conveyor berjalan mundur dengan kecepatan yang ditentukan
     int sensorLogam = digitalRead(sensorInduktif);
 
     if (sensorLogam == 0) {  // Logam terdeteksi
-      Serial.println("Logam terdeteksi! Posisi servo berubah.");
+      // Serial.println("Logam terdeteksi! Posisi servo berubah.");
       bendaLogam++;      // Tambahkan jumlah benda logam
       totalBenda++;      // Tambahkan total benda
       servo1.write(0);   // Servo 1 bergerak ke 0 derajat
@@ -156,7 +184,7 @@ void loop() {
       delay(5000);       // Tunggu 5 detik
       servo1.write(90);  // Servo 1 kembali ke 90 derajat
       servo2.write(0);   // Servo 2 kembali ke 0 derajat
-      Serial.println("Servo kembali ke posisi awal.");
+      // Serial.println("Servo kembali ke posisi awal.");
     }
 
     // Membaca sensor inframerah untuk mendeteksi non-logam
@@ -167,20 +195,21 @@ void loop() {
       totalBenda++;            // Tambahkan total benda
       if (sensorLogam != 0) {  // Jika logam tidak terdeteksi, maka ini benda non-logam
         bendaNonLogam++;
-        Serial.println("Non-logam terdeteksi!");
+        // Serial.println("Non-logam terdeteksi!");
       }
     }
 
     prevStateIR = sensorIRValue;  // Perbarui status sebelumnya untuk sensor IR
 
     // Menampilkan jumlah benda
-    Serial.print("Total Benda: ");
-    Serial.println(totalBenda);
-    Serial.print("Benda Logam: ");
-    Serial.println(bendaLogam);
-    Serial.print("Benda Non-Logam: ");
-    Serial.println(bendaNonLogam);
+    // Serial.print("Total Benda: ");
+    // Serial.println(totalBenda);
+    // Serial.print("Benda Logam: ");
+    // Serial.println(bendaLogam);
+    // Serial.print("Benda Non-Logam: ");
+    // Serial.println(bendaNonLogam);
     sendData(temperature, bendaLogam, bendaNonLogam, totalBenda);  // Fungsi untuk mengirim data ganti setiap parameter dengan variable yang sesuai
+    // Membaca sensor proximity logam
 
   } else {
     // Conveyor dalam keadaan berhenti
