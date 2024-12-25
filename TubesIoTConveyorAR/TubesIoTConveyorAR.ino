@@ -138,11 +138,6 @@ void loop() {
 
   if (stateButton == 1) {
     conveyorRunning = true;
-    // digitalWrite(R_EN, LOW);   // Matikan arah maju
-    // digitalWrite(L_EN, HIGH);  // Aktifkan arah mundur
-    // analogWrite(RPWM, 0);      // Pastikan maju mati
-    // analogWrite(LPWM, power);  // Atur kecepatan mundur
-    // Serial.println("Conveyor mulai berjalan mundur.");
   } else if (stateButton == 0) {
     conveyorRunning = false;
     digitalWrite(R_EN, LOW);  // Matikan arah maju
@@ -202,12 +197,12 @@ void loop() {
     prevStateIR = sensorIRValue;  // Perbarui status sebelumnya untuk sensor IR
 
     // Menampilkan jumlah benda
-    // Serial.print("Total Benda: ");
-    // Serial.println(totalBenda);
-    // Serial.print("Benda Logam: ");
-    // Serial.println(bendaLogam);
-    // Serial.print("Benda Non-Logam: ");
-    // Serial.println(bendaNonLogam);
+    Serial.print("Total Benda: ");
+    Serial.println(totalBenda);
+    Serial.print("Benda Logam: ");
+    Serial.println(bendaLogam);
+    Serial.print("Benda Non-Logam: ");
+    Serial.println(bendaNonLogam);
     sendData(temperature, bendaLogam, bendaNonLogam, totalBenda);  // Fungsi untuk mengirim data ganti setiap parameter dengan variable yang sesuai
     // Membaca sensor proximity logam
 
