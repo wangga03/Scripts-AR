@@ -84,7 +84,7 @@ public class DatabaseManager : MonoBehaviour
         else
             Debug.LogError("Button Decrement tidak diassign di Inspector!");
 
-        // Memulai listener untuk membaca data sensor secara realtime
+        // Memulai membaca data sensor secara realtime
         StartRealtimeListenerInduktif();
         StartRealtimeListenerIR();
         StartRealtimeListenerSUM();
@@ -105,7 +105,7 @@ public class DatabaseManager : MonoBehaviour
             return;
         }
 
-        // Mendengarkan perubahan pada data sensor di Firebase
+        // Mengambil perubahan pada data sensor di Firebase
         reference.Child("TubesIoT").Child("induktif").ValueChanged += HandleValueInduktif;
     }
 
@@ -123,7 +123,7 @@ public class DatabaseManager : MonoBehaviour
             return;
         }
 
-        // Mendengarkan perubahan pada data sensor di Firebase
+        // Mengambil perubahan pada data sensor di Firebase
         reference.Child("TubesIoT").Child("temperature").ValueChanged += HandleTemperatureChanged;
     }
 
@@ -141,7 +141,7 @@ public class DatabaseManager : MonoBehaviour
             return;
         }
 
-        // Mendengarkan perubahan pada data sensor di Firebase
+        // Mengambil perubahan pada data sensor di Firebase
         reference.Child("TubesIoT").Child("IR").ValueChanged += HandleValueIR;
     }
     private void StartRealtimeListenerSUM()
